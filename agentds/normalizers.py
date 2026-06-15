@@ -38,12 +38,21 @@ class NormCtx:
 # Shared primitives
 # --------------------------------------------------------------------------- #
 
+_MAX_CONTENT_CHARS = 200_000  # cap pathological dumps (e.g. Excel data in pi sessions)
+
+
+def _cap(text: str | None) -> str | None:
+    if text and len(text) > _MAX_CONTENT_CHARS:
+        return text[:_MAX_CONTENT_CHARS] + "\n…[content truncated]"
+    return text
+
+
 def _clean(text: Any) -> str | None:
     if text is None:
         return None
     if not isinstance(text, str):
         return text
-    return strip_markers(strip_cot(text))
+    return _cap(strip_markers(strip_cot(text)))
 
 
 def args_to_obj(raw: Any) -> dict:
@@ -64,6 +73,9 @@ def mk_msg(role: str, content: Any = None, tool_calls=None, tool_responses=None)
     if tool_calls:
         m["tool_calls"] = tool_calls
     if tool_responses:
+        for tr in tool_responses:
+            if isinstance(tr.get("response"), str):
+                tr["response"] = _cap(tr["response"])
         m["tool_responses"] = tool_responses
     return m
 

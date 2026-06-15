@@ -121,12 +121,15 @@ def _has_ellipsis(v: Any) -> bool:
 # --------------------------------------------------------------------------- #
 
 _THINK_RE = re.compile(r"<think>.*?</think>\s*", re.DOTALL | re.IGNORECASE)
+_THINK_OPEN_RE = re.compile(r"<think>.*$", re.DOTALL | re.IGNORECASE)
 
 
 def strip_cot(text: str | None) -> str | None:
     if not text:
         return text
-    return _THINK_RE.sub("", text).strip() or None
+    text = _THINK_RE.sub("", text)        # closed <think>…</think>
+    text = _THINK_OPEN_RE.sub("", text)   # unclosed <think>… (reasoning runs to end)
+    return text.strip() or None
 
 
 # --------------------------------------------------------------------------- #

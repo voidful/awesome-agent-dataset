@@ -261,6 +261,15 @@ def test_qa_fixes():
     check('"x":null' in out and '"y":null' in out, "NaN/Inf -> null")
     json.loads(out)  # must be valid JSON
     check(True, "jdumps output is valid JSON")
+    # 7. unclosed <think> CoT is stripped (hermes_reasoning/toolmind reasoning)
+    from agentds.schema import strip_cot
+    check(strip_cot("<think>\nlong reasoning with no close tag") is None, "unclosed <think> -> dropped")
+    check(strip_cot("<think>reason</think>answer") == "answer", "closed <think> -> answer kept")
+    check(strip_cot("<think>r1</think>mid<think>r2 unclosed") == "mid", "mixed closed+unclosed think")
+    # 8. content cap on pathological dumps
+    from agentds.normalizers import _cap
+    big = "x" * 300_000
+    check(len(_cap(big)) < 220_000, "oversized content capped")
 
 
 def main():

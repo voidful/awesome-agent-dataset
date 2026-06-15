@@ -73,9 +73,11 @@ def audit(out_dir: str | Path = "data/expansion") -> dict:
                 flag("tool_missing_name")
             if params and ("type" not in params or "properties" not in params):
                 flag("tool_params_not_jsonschema")
-            # schema-key-as-arg corruption (the coerce_parameters bug signature)
+            # schema-key-as-arg corruption: the coerce bug turned a dict-schema's own
+            # {type,properties,required} keys into args, so all three appear together.
+            # (A single legit arg named "type"/"properties" is NOT corruption.)
             props = (params or {}).get("properties", {})
-            if isinstance(props, dict) and ({"type", "properties", "required"} & set(props)):
+            if isinstance(props, dict) and {"type", "properties", "required"} <= set(props):
                 flag("schema_keys_leaked_as_args")
 
         roles = [m.get("role") for m in msgs]
