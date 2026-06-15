@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.10", "3.12"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - name: Install
+        run: pip install -e .
+      - name: Offline normalizer + dedup tests
+        run: python -m tests.test_normalizers
+      - name: Catalog stays in sync with registry
+        run: |
+          python -m agentds.cli catalog --outfile /tmp/CATALOG.gen.md
+          diff -q CATALOG.md /tmp/CATALOG.gen.md || (echo "::error::CATALOG.md is stale — run 'agentds catalog'" && exit 1)

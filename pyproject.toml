@@ -1,0 +1,22 @@
+[project]
+name = "agentds"
+version = "0.1.0"
+description = "Expansion toolkit for voidful/gemma4-agent-sft: normalize, dedup, quality-stratify HF agent/tool-use datasets into one canonical schema."
+requires-python = ">=3.10"
+dependencies = [
+    "datasets>=3.0",
+    "huggingface_hub>=0.25",
+    "pyarrow>=15",
+    "datasketch>=1.6",
+    "xxhash>=3.0",
+    "pyyaml>=6.0",
+    "tqdm>=4.66",
+    "teich>=0.2",  # decoder for HF `format: agent-traces` datasets
+]
+
+[project.scripts]
+agentds = "agentds.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["agentds*"]

@@ -1,0 +1,449 @@
+# Source registry for the gemma4-agent-sft expansion (v0.1).
+#
+# Each source declares: a normalizer (see agentds/normalizers.py), the HF configs/
+# splits to ingest with per-subset row caps (streaming + sampling — big SWE sources
+# are NEVER fully materialized), a dedup_group (group-level dedup key), column hints
+# (cfg), external quality signals (ext) and provenance columns to carry into metadata
+# (needed for SWE cross-dataset dedup).
+#
+# Toggle a source with `enabled`. Run `agentds run --tier <tier>` to ingest a tier.
+
+defaults:
+  near_dedup: true
+  near_threshold: 0.85
+
+sources:
+
+  # ----------------------------------------------------------------- #
+  # TIER 1: tool / function calling  (small, text-only, near-canonical)
+  # ----------------------------------------------------------------- #
+  - key: apigen
+    hf_id: argilla/apigen-function-calling
+    tier: function_calling
+    normalizer: xlam
+    dedup_group: xlam_apigen
+    enabled: true
+    license: cc-by-4.0
+    cfg: {query_col: query, answers_col: answers, tools_col: tools}
+    subsets:
+      - {config: default, split: train, max_rows: 40000}
+
+  - key: apigen_mt
+    hf_id: Salesforce/APIGen-MT-5k
+    tier: function_calling
+    normalizer: sharegpt
+    dedup_group: xlam_apigen
+    enabled: true
+    license: cc-by-4.0
+    cfg: {conv_col: conversations, tools_col: tools, system_col: system}
+    subsets:
+      - {config: dataset, split: train, max_rows: 5000}   # NOTE: config name is "dataset"
+
+  - key: glaive
+    hf_id: hiyouga/glaive-function-calling-v2-sharegpt
+    tier: function_calling
+    normalizer: sharegpt
+    dedup_group: glaive
+    enabled: true
+    license: apache-2.0
+    cfg: {conv_col: conversations, tools_col: tools}
+    subsets:
+      - {config: default, split: train, max_rows: 40000}
+
+  - key: toolace
+    hf_id: Team-ACE/ToolACE
+    tier: function_calling
+    normalizer: toolace
+    dedup_group: toolace
+    enabled: true
+    license: apache-2.0
+    cfg: {}
+    subsets:
+      - {config: default, split: train, max_rows: 12000}
+
+  - key: when2call
+    hf_id: nvidia/When2Call
+    tier: function_calling
+    normalizer: when2call
+    dedup_group: when2call
+    enabled: true
+    license: cc-by-4.0
+    cfg: {}
+    subsets:
+      - {config: train_sft, split: train, max_rows: 15000}
+
+  - key: hermes
+    hf_id: NousResearch/hermes-function-calling-v1
+    tier: function_calling
+    normalizer: hermes
+    dedup_group: hermes
+    enabled: true
+    license: apache-2.0
+    cfg: {conv_col: conversations, tools_col: tools}
+    subsets:
+      - {config: func_calling, split: train, max_rows: 2000}
+      - {config: func_calling_singleturn, split: train, max_rows: 2000}
+      - {config: glaive_func_calling, split: train, max_rows: 6000}
+
+  - key: hermes_reasoning
+    hf_id: interstellarninja/hermes_reasoning_tool_use
+    tier: function_calling
+    normalizer: hermes
+    dedup_group: hermes
+    enabled: true
+    license: apache-2.0
+    cfg: {conv_col: conversations, tools_col: tools}
+    subsets:
+      - {config: default, split: train, max_rows: 30000}
+
+  - key: toolmind
+    hf_id: Nanbeige/ToolMind
+    tier: function_calling
+    normalizer: openai_messages
+    dedup_group: toolmind
+    enabled: true
+    license: apache-2.0
+    cfg: {messages_col: conversations, tools_col: tools}
+    subsets:
+      - {config: test, split: open_datasets, max_rows: 30000}
+      - {config: test, split: graph_syn_datasets, max_rows: 20000}
+
+  # ----------------------------------------------------------------- #
+  # TIER 2: SWE / terminal  (STREAM + SAMPLE; sources are 2-100 GB)
+  # ----------------------------------------------------------------- #
+  - key: swe_gym
+    hf_id: SWE-Gym/OpenHands-Sampled-Trajectories
+    tier: swe_terminal
+    normalizer: openai_messages
+    dedup_group: swe_openhands
+    enabled: true
+    license: mit
+    cfg: {messages_col: messages, tools_col: tools, synthesize_tools: true, clean_tool_content: true}
+    ext: {resolved: resolved}
+    provenance: [instance_id, run_id]
+    subsets:
+      - {config: default, split: train.raw, max_rows: 6055}
+
+  - key: swe_rebench
+    hf_id: nebius/SWE-rebench-openhands-trajectories
+    tier: swe_terminal
+    normalizer: openai_messages
+    dedup_group: swe_openhands
+    enabled: true
+    license: cc-by-4.0
+    cfg: {messages_col: trajectory, tools_col: tools, synthesize_tools: true, clean_tool_content: true}
+    ext: {resolved: resolved}
+    provenance: [instance_id, repo, trajectory_id]
+    subsets:
+      - {config: default, split: train, max_rows: 20000}
+
+  - key: swe_zero
+    hf_id: nvidia/SWE-Zero-openhands-trajectories
+    tier: swe_terminal
+    normalizer: openai_messages
+    dedup_group: swe_openhands
+    enabled: true
+    license: cc-by-4.0
+    cfg: {messages_col: trajectory, tools_col: null, synthesize_tools: true, clean_tool_content: true}
+    provenance: [instance_id, repo, trajectory_id]
+    subsets:
+      - {config: default, split: train, max_rows: 15000}
+
+  - key: swe_smith
+    hf_id: SWE-bench/SWE-smith-trajectories
+    tier: swe_terminal
+    normalizer: openai_messages
+    dedup_group: swe_openhands
+    enabled: true
+    license: mit
+    cfg: {messages_col: messages, tools_col: null, synthesize_tools: true, clean_tool_content: true}
+    ext: {resolved: resolved}
+    provenance: [instance_id, traj_id]
+    subsets:
+      - {config: default, split: tool, max_rows: 15000}
+
+  - key: coderforge
+    hf_id: togethercomputer/CoderForge-Preview
+    tier: swe_terminal
+    normalizer: openai_messages
+    dedup_group: swe_openhands
+    enabled: true
+    license: apache-2.0
+    cfg: {messages_col: messages, tools_col: tools, clean_tool_content: true}
+    ext: {reward: reward}
+    provenance: [trajectory_id, image]
+    subsets:
+      - {config: trajectories, split: filtered_reward1, max_rows: 20000}
+
+  - key: nemotron_terminal
+    hf_id: nvidia/Nemotron-Terminal-Corpus
+    tier: swe_terminal
+    normalizer: nemotron_terminal
+    dedup_group: nemotron_terminal
+    enabled: true
+    license: cc-by-4.0
+    cfg: {}
+    provenance: [task, run_id]
+    subsets:
+      - {config: skill_based_easy, split: train, max_rows: 12000}
+      - {config: skill_based_medium, split: train, max_rows: 18000}
+
+  # ----------------------------------------------------------------- #
+  # TIER 3: web / browser / GUI  (text observations only)
+  # ----------------------------------------------------------------- #
+  - key: weblinx
+    hf_id: McGill-NLP/WebLINX
+    tier: web
+    normalizer: weblinx
+    dedup_group: weblinx
+    enabled: true
+    license: cc-by-nc-sa-4.0
+    cfg: {}
+    provenance: [demo, turn]
+    subsets:
+      - {config: chat, split: train, max_rows: 24418}
+
+  - key: mind2web
+    hf_id: osunlp/Mind2Web
+    tier: web
+    normalizer: mind2web
+    dedup_group: mind2web
+    enabled: true
+    license: cc-by-4.0
+    cfg: {}
+    provenance: [annotation_id]
+    subsets:
+      - {config: default, split: train, max_rows: 1009}
+
+  - key: nnetnav
+    hf_id: stanfordnlp/nnetnav-live
+    tier: web
+    normalizer: nnetnav
+    dedup_group: nnetnav
+    enabled: true
+    license: mit
+    cfg: {}
+    subsets:
+      - {config: default, split: train, max_rows: 30000}
+
+  # A3-Synth is screenshot-only -> unusable by a text-only model without OCR. Disabled.
+  - key: a3_synth
+    hf_id: McGill-NLP/A3-Synth
+    tier: web
+    normalizer: openai_messages
+    dedup_group: a3_synth
+    enabled: false
+    license: cc-by-4.0
+    cfg: {}
+    subsets: []
+    notes: "screenshot-only observations; needs OCR/captioning before a text model can use it"
+
+  # ----------------------------------------------------------------- #
+  # TIER 4: general instruction retention  (5-15% of mix)
+  # ----------------------------------------------------------------- #
+  - key: openhermes
+    hf_id: teknium/OpenHermes-2.5
+    tier: general
+    normalizer: sharegpt
+    dedup_group: openhermes
+    enabled: true
+    license: other
+    cfg: {conv_col: conversations}
+    subsets:
+      - {config: default, split: train, max_rows: 20000}
+
+  - key: smoltalk2
+    hf_id: HuggingFaceTB/smoltalk2
+    tier: general
+    normalizer: smoltalk2
+    dedup_group: smoltalk2
+    enabled: true
+    license: apache-2.0
+    cfg: {}
+    subsets:
+      - {config: SFT, split: smolagents_toolcalling_traces_think, max_rows: 8000}
+      - {config: SFT, split: multi_turn_reasoning_if_think, max_rows: 8000}
+      - {config: SFT, split: tulu_3_sft_personas_instruction_following_no_think, max_rows: 8000}
+
+  # ----------------------------------------------------------------- #
+  # TIER 5: agent-traces  (HF `format: agent-traces` — real claude_code / pi
+  #   coding-agent sessions. OpenAI-style: messages{role,content,tool_calls},
+  #   object args, tool role w/ tool_call_id+name, separate tools col;
+  #   reasoning_content (CoT) is dropped by the normalizer. Curated from the
+  #   trending listing; dedup collapses fork-duplicates (e.g. the two
+  #   *ml-intern-sessions*, *hf-coding-tools-traces*, *DeepSeek-v4-Pro-Agent*).
+  #   Capped so coding sessions don't overwhelm general agent ability.)
+  # ----------------------------------------------------------------- #
+  # NOTE: jedisct1/security-audits (3.3GB) is catalog-listed but NOT wired: it hangs
+  # on teich streaming AND times out on full download. Re-enable once HF serves it more
+  # reliably, or shard-sample it offline.
+  - key: at_security_audits
+    hf_id: jedisct1/security-audits
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: false
+    stream: false
+    license: other
+    rows: "35k"
+    format: agent_traces
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    notes: "3.3GB; download times out — wire up via offline shard-sampling"
+    subsets: []
+
+  - key: at_deepseek_v4_pro
+    hf_id: TeichAI/DeepSeek-v4-Pro-Agent
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 4006}
+
+  - key: at_deepseek_v4_pro_mirror
+    hf_id: ansulev/DeepSeek-v4-Pro-Agent
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 4006}   # likely dup of TeichAI -> deduped
+
+  - key: at_synthtraces
+    hf_id: julien-c/synthtraces
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 2876}
+
+  - key: at_qwen37_max_pi
+    hf_id: armand0e/qwen3.7-max-pi-traces
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 2000}
+
+  - key: at_minimax_m3_cc
+    hf_id: armand0e/minimax-m3-claude-code-traces
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 3000}
+
+  - key: at_hf_coding_tools
+    hf_id: clem/hf-coding-tools-traces
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 3000}
+
+  - key: at_ml_intern
+    hf_id: lewtun/ml-intern-sessions
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 3000}
+
+  - key: at_pi_excel
+    hf_id: thomasmustier/pi-for-excel-sessions
+    tier: agent_traces
+    normalizer: openai_messages
+    dedup_group: agent_traces
+    enabled: true
+    stream: false   # teich/agent-traces streaming hangs on socket reads; download fully
+    license: other
+    cfg: {messages_col: messages, tools_col: tools}
+    provenance: [harness, session_id]
+    subsets:
+      - {config: default, split: train, max_rows: 2000}
+
+  # =================================================================== #
+  # CATALOG-ONLY (enabled: false) — inventory of the broader agent-dataset
+  # landscape. Listed for discoverability; wire up by adding a normalizer +
+  # subsets and flipping `enabled: true`. (PRs welcome.)
+  # =================================================================== #
+
+  # ---- tool / function calling ---- #
+  - {key: c_xlam60k, hf_id: Salesforce/xlam-function-calling-60k, tier: function_calling, dedup_group: xlam_apigen, enabled: false, license: cc-by-4.0, rows: "60k", format: xlam_query_answers, notes: "canonical xLAM; GATED — needs HF license + token"}
+  - {key: c_glaive_v2_raw, hf_id: glaiveai/glaive-function-calling-v2, tier: function_calling, dedup_group: glaive, enabled: false, license: apache-2.0, rows: "113k", format: glaive_flat_text, notes: "raw flat-text; prefer the sharegpt fork (wired)"}
+  - {key: c_synth_apigen, hf_id: argilla/Synth-APIGen-v0.1, tier: function_calling, dedup_group: xlam_apigen, enabled: false, license: apache-2.0, rows: "49k", format: xlam_query_answers, notes: "subset of apigen-function-calling (wired)"}
+  - {key: c_toolhop, hf_id: bytedance-research/ToolHop, tier: function_calling, dedup_group: toolhop, enabled: false, license: apache-2.0, format: other, notes: "multi-hop tool reasoning w/ executable tools"}
+  - {key: c_toolenv2404, hf_id: stabletoolbench/ToolEnv2404, tier: function_calling, dedup_group: toolbench, enabled: false, license: apache-2.0, format: other, notes: "StableToolBench tool environment"}
+  - {key: c_taubench_synth, hf_id: fuvty/tau-bench-synthetic, tier: function_calling, dedup_group: taubench, enabled: false, license: mit, format: other, notes: "customer-service tool-use"}
+  - {key: c_apigen_tau, hf_id: amityco/apigen-tau-bench-split-turn, tier: function_calling, dedup_group: taubench, enabled: false, license: apache-2.0, rows: "46k", format: sharegpt, notes: "tau-bench multi-turn splits"}
+  - {key: c_when2call_pref, hf_id: nvidia/When2Call, tier: function_calling, dedup_group: when2call, enabled: false, license: cc-by-4.0, rows: "9k", format: openai_messages, notes: "train_pref DPO pairs (when-not-to-call)"}
+  - {key: c_nemotron_v2, hf_id: nvidia/Nemotron-SFT-Agentic-v2, tier: function_calling, dedup_group: nemotron, enabled: false, license: cc-by-4.0, rows: "992k", format: openai_messages, notes: "in the seed dataset; tool-calling SFT main"}
+  - {key: c_nemotron_v1, hf_id: nvidia/Nemotron-Agentic-v1, tier: function_calling, dedup_group: nemotron, enabled: false, license: cc-by-4.0, rows: "335k", format: openai_messages, notes: "interactive agent + tool calling"}
+
+  # ---- core agent trajectory corpora ---- #
+  - {key: c_agenttrove, hf_id: open-thoughts/AgentTrove, tier: core, dedup_group: agenttrove, enabled: false, license: apache-2.0, rows: "1.70M", format: openai_messages, notes: "in seed; 219-source agent trajectory pool"}
+  - {key: c_toucan, hf_id: Agent-Ark/Toucan-1.5M, tier: core, dedup_group: toucan, enabled: false, license: apache-2.0, rows: "1.5M", format: toucan, notes: "in seed; MCP tool trajectories"}
+  - {key: c_neulab, hf_id: neulab/agent-data-collection, tier: core, dedup_group: neulab_aggregate, enabled: false, license: mit, format: other, notes: "unified multi-source (OpenHands/SWE/Mind2Web/...)"}
+  - {key: c_agentinstruct, hf_id: zai-org/AgentInstruct, tier: core, dedup_group: agentinstruct, enabled: false, license: apache-2.0, rows: "1866", format: sharegpt, notes: "high-quality seed (ALFWorld/WebShop/KG/OS/DB)"}
+  - {key: c_agentbank, hf_id: Solaris99/AgentBank, tier: core, dedup_group: agentbank, enabled: false, license: apache-2.0, rows: "53k", format: other, notes: "agent skill diversity"}
+  - {key: c_openmanus, hf_id: CharlieDreemur/OpenManus-RL, tier: core, dedup_group: openmanus, enabled: false, license: apache-2.0, format: other, notes: "ReAct-style; AgentInstruct+Agent-FLAN+AgentGym"}
+  - {key: c_ot_agent_sft, hf_id: open-thoughts/OpenThoughts-Agent-v1-SFT, tier: core, dedup_group: openthoughts_agent, enabled: false, license: apache-2.0, rows: "15.2k", format: openai_messages, notes: "agent SFT"}
+
+  # ---- SWE / terminal ---- #
+  - {key: c_swezero12m, hf_id: AlienKevin/SWE-ZERO-12M-trajectories, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: cc-by-4.0, rows: "12.29M", tokens: "111B", format: openhands_events, notes: "mid-training corpus (NOT verified SFT); stream+sample only"}
+  - {key: c_swefixer, hf_id: internlm/SWE-Fixer-Train-110K, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: apache-2.0, rows: "115k", format: raw_swe_instance, notes: "GitHub issue resolution / SWE repair"}
+  - {key: c_swehero, hf_id: nvidia/SWE-Hero-openhands-trajectories, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: cc-by-4.0, rows: "34k", format: openhands_events, notes: "long-horizon coding"}
+  - {key: c_swegym, hf_id: SWE-Gym/SWE-Gym, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: mit, rows: "2438", format: raw_swe_instance, notes: "validated instances; train + eval"}
+  - {key: c_swegym_raw, hf_id: SWE-Gym/SWE-Gym-Raw, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: mit, rows: "64.7k", format: raw_swe_instance, notes: "raw, unverified; environment expansion"}
+  - {key: c_r2egym, hf_id: R2E-Gym/R2E-Gym-V1, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: mit, rows: "7478", format: raw_swe_instance, notes: "real-world repo execution tasks"}
+  - {key: c_swegym_verifier, hf_id: SWE-Gym/OpenHands-Verifier-Trajectories, tier: swe_terminal, dedup_group: swe_openhands, enabled: false, license: mit, rows: "5272", format: openhands_events, notes: "verifier / rejection sampling"}
+
+  # ---- web / browser / GUI ---- #
+  - {key: c_mm_mind2web, hf_id: osunlp/Multimodal-Mind2Web, tier: web, dedup_group: mind2web, enabled: false, license: cc-by-4.0, rows: "14.2k", format: web_action_trajectory, notes: "multimodal (screenshots) — needs OCR for text model"}
+  - {key: c_nnetnav_wa, hf_id: stanfordnlp/nnetnav-wa, tier: web, dedup_group: nnetnav, enabled: false, license: mit, format: web_action_trajectory, notes: "WebArena-style synthetic demos"}
+  - {key: c_scalecua, hf_id: OpenGVLab/ScaleCUA-Data, tier: web, dedup_group: scalecua, enabled: false, license: apache-2.0, format: web_action_trajectory, notes: "cross-platform GUI (Linux/macOS/Win/Android/iOS/Web)"}
+  - {key: c_mind2web_live, hf_id: iMeanAI/Mind2Web-Live, tier: web, dedup_group: mind2web, enabled: false, license: cc-by-4.0, rows: "646", format: web_action_trajectory, notes: "live web tasks"}
+
+  # ---- RL / verifier / rejection sampling ---- #
+  - {key: c_ot_agent_rl, hf_id: open-thoughts/OpenThoughts-Agent-RL-5K, tier: rl, dedup_group: openthoughts_agent, enabled: false, license: apache-2.0, rows: "5k", format: other, notes: "executable tasks w/ verifier/reward"}
+  - {key: c_tasktrove, hf_id: open-thoughts/TaskTrove, tier: rl, dedup_group: agenttrove, enabled: false, license: apache-2.0, rows: "17.2k", format: other, notes: "AgentTrove task complement"}
+  - {key: c_ot_coldstart, hf_id: open-thoughts/OpenThoughts-Agent-SFT-ColdStartForRL-10K, tier: rl, dedup_group: openthoughts_agent, enabled: false, license: apache-2.0, rows: "9437", format: openai_messages, notes: "RL cold start"}
+  - {key: c_nemotron_rl_swe, hf_id: nvidia/Nemotron-RL-Agentic-SWE-Pivot-v1, tier: rl, dedup_group: nemotron, enabled: false, license: cc-by-4.0, format: other, notes: "step-level behavior cloning pivots"}
+
+  # ---- general / retention ---- #
+  - {key: c_smoltalk, hf_id: HuggingFaceTB/smoltalk, tier: general, dedup_group: smoltalk2, enabled: false, license: apache-2.0, rows: "1.1M", format: openai_messages, notes: "incl. APIGen-FC 80k subset; overlaps APIGen"}
+  - {key: c_dolci, hf_id: allenai/Dolci-Instruct-SFT-Tool-Use, tier: general, dedup_group: dolci, enabled: false, license: odc-by, format: openai_messages, notes: "OLMo 3 Instruct tool-use retention"}

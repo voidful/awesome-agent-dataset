@@ -1,0 +1,9 @@
+# Tested, pinned versions (pyproject.toml carries the >= ranges).
+datasets==5.0.0
+huggingface_hub==1.19.0
+pyarrow==24.0.0
+datasketch==1.10.0
+xxhash==3.7.0
+pyyaml==6.0.3
+tqdm==4.68.2
+teich==0.2.1
