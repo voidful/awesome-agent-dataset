@@ -4,6 +4,7 @@
 
 **A curated catalog of agent-training datasets — *plus* a working toolkit that normalizes, filters, and deduplicates them into one canonical schema.**
 
+[![CI](https://github.com/voidful/awesome-agent-dataset/actions/workflows/ci.yml/badge.svg)](https://github.com/voidful/awesome-agent-dataset/actions/workflows/ci.yml)
 [![Awesome](https://awesome.re/badge.svg)](https://awesome.re)
 [![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
