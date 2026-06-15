@@ -35,21 +35,22 @@ For fine-tuning an agent model, **finding tokens is not the bottleneck** — pub
 [**🤗 voidful/agent-sft**](https://huggingface.co/datasets/voidful/agent-sft) — produced entirely by this repo from the wired sources, deduplicated against the published seed.
 
 <!-- STATS:START -->
-**328,451 rows** from 27 wired sources, deduplicated against the published seed.
+**309,322 rows** from 27 wired sources, deduplicated against the published seed.
 
 | Tier | Rows | Share |
 |---|--:|--:|
-| 🛠️ function_calling | 172,269 | 52% |
-| 💻 swe_terminal | 61,153 | 19% |
-| 🌐 web | 46,601 | 14% |
+| 🛠️ function_calling | 171,910 | 56% |
+| 💻 swe_terminal | 61,153 | 20% |
 | 💬 general | 41,470 | 13% |
-| 🧵 agent_traces | 6,958 | 2% |
-| **Total** | **328,451** | |
+| 🌐 web | 27,830 | 9% |
+| 🧵 agent_traces | 6,959 | 2% |
+| **Total** | **309,322** | |
 
-**Quality:** 122,844 high (37%) · 194,695 medium (59%) · 10,912 low (3%)
-**Dedup removed 83,829 candidates** — 43,914 SWE-group (same GitHub issue across SWE datasets) · 31,072 near-dup (MinHash) · 8,843 exact, *plus* dedup against the published seed. (E.g. `ansulev/DeepSeek-v4-Pro-Agent` → **0 kept**, fully collapsed into its `TeichAI` twin.)
+**Quality:** 147,238 high (48%) · 161,580 medium (52%) · 504 low (0.2%)
+**Dedup removed 99,492 candidates (24%)** — 43,914 SWE-group (same GitHub issue across SWE datasets) · 46,725 near-dup (MinHash) · 8,853 exact, *plus* dedup against the published seed. (E.g. `ansulev/DeepSeek-v4-Pro-Agent` → **0 kept**, fully collapsed into its `TeichAI` twin.)
+**`agentds audit`:** 0 CoT leakage · 0 schema corruption · 0 id collisions · 0 foreign-marker leaks.
 
-Coding-heavy data (swe_terminal + agent_traces) is held to **~21%** so general agent ability isn't drowned. See [CATALOG.md](CATALOG.md) for per-source counts.
+Coding-heavy data (swe_terminal + agent_traces) is held to **~22%** so general agent ability isn't drowned. See [CATALOG.md](CATALOG.md) for per-source counts.
 <!-- STATS:END -->
 
 ```python
