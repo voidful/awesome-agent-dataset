@@ -52,6 +52,18 @@ For fine-tuning an agent model, **finding tokens is not the bottleneck** — pub
 Coding-heavy data (swe_terminal + agent_traces) is held to **~21%** so general agent ability isn't drowned. See [CATALOG.md](CATALOG.md) for per-source counts.
 <!-- STATS:END -->
 
+```python
+import json
+from datasets import load_dataset
+
+ds = load_dataset("voidful/agent-sft", split="train")
+hi = ds.filter(lambda r: json.loads(r["quality"])["tier"] == "high")   # high-quality SFT subset
+ex = hi[0]
+messages = json.loads(ex["messages"])   # OpenAI-style turns
+tools    = json.loads(ex["tools"])      # function definitions
+# concatenate with the seed: load_dataset("voidful/gemma4-agent-sft") — identical schema
+```
+
 ## 🚀 Quickstart
 
 ```bash
@@ -62,11 +74,12 @@ agentds catalog                       # regenerate CATALOG.md from the registry
 agentds validate --tier function_calling -n 30   # normalize LIVE rows, sanity-check
 agentds run --tier function_calling --tier agent_traces   # stream → normalize → dedup → shards
 agentds stats                         # composition + dedup + quality report
+agentds audit                         # quantify data-quality defects (quality gate)
 agentds push --repo you/your-agent-sft --public          # to a new HF dataset repo
 ```
 
 Pick tiers (`function_calling`, `agent_traces`, `swe_terminal`, `web`, `general`) or individual
-sources (`--key apigen --key swe_gym`). `--limit N` caps rows/subset for a quick dry run.
+sources (`--key apigen swe_gym`). `--limit N` caps rows/subset for a quick dry run.
 
 ## 🧩 Canonical schema
 
