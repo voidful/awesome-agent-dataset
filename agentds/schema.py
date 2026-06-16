@@ -1,7 +1,8 @@
 """Canonical record schema + shared normalization primitives.
 
-The canonical schema mirrors ``voidful/gemma4-agent-sft`` exactly so expansion
-shards can be concatenated with the seed dataset:
+A canonical, model-agnostic OpenAI-style agent-SFT schema — train any model on it.
+(It is also wire-compatible with ``voidful/gemma4-agent-sft``, so shards can be
+concatenated with that dataset.)
 
     id            : str
     source        : str            (e.g. "xlam", "glaive", "swe_zero")

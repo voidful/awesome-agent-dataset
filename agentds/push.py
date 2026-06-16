@@ -14,7 +14,6 @@ tags:
 - function-calling
 - swe
 - web-agent
-- gemma4-agent-sft
 configs:
 - config_name: default
   data_files: data/*.parquet
@@ -22,12 +21,14 @@ configs:
 
 # {repo_id}
 
-Expansion of [voidful/gemma4-agent-sft](https://huggingface.co/datasets/voidful/gemma4-agent-sft),
-sharing its **exact canonical schema** so the two can be concatenated.
+A **model-agnostic** agent / tool-use SFT dataset in a standard OpenAI-style schema —
+train any model on it (Qwen, Llama, Gemma, GPT, …).
 
 Built with the [agentds](https://github.com/voidful/awesome-agent-dataset) toolkit:
-per-source normalization -> group-level dedup (exact + SWE-provenance + MinHash near-dup,
-including dedup against the published seed) -> heuristic quality stratification.
+per-source normalization -> group-level dedup (exact + SWE-provenance + MinHash near-dup)
+-> heuristic quality stratification. The schema is wire-compatible with
+[voidful/gemma4-agent-sft](https://huggingface.co/datasets/voidful/gemma4-agent-sft)
+(this run also dedups against it), so the two concatenate cleanly.
 
 ## Schema
 

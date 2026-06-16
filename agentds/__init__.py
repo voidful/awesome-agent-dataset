@@ -1,4 +1,8 @@
-"""agentds — expansion toolkit for the gemma4-agent-sft canonical schema.
+"""agentds — toolkit for building model-agnostic agent-SFT datasets.
+
+Normalizes HF agent/tool-use/SWE/web datasets into one canonical, OpenAI-style
+schema (usable to train any model — Qwen, Llama, Gemma, GPT, …), then dedups and
+quality-stratifies them.
 
 Pipeline: stream HF source -> normalize to canonical schema -> group-level dedup
 -> quality stratify -> sharded parquet -> push to HF hub.

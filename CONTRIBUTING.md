@@ -65,7 +65,7 @@ agentds catalog          # updates CATALOG.md
   row's `metadata.license`. Don't wire gated datasets without noting the gating.
 - **Keep coding-agent data balanced.** SWE/terminal/agent-traces data is abundant; cap it so it
   doesn't drown general agent ability.
-- **Strip CoT.** Normalizers drop `<think>…</think>` / `reasoning_content` to match the seed.
+- **Strip CoT.** Normalizers drop `<think>…</think>` / `reasoning_content` to match the canonical schema.
 
 ## Dev setup
 

@@ -2,8 +2,8 @@
 
   agentds validate [--tier T ...] [--key K ...] [-n 5]   # normalize live rows, sanity-check
   agentds seed [--limit N]                                 # build seed dedup hash cache
-  agentds run --tier T ... [--out DIR] [--limit N] [--no-seed-dedup] [--no-near]
-  agentds push --repo voidful/gemma4-agent-sft-v2 [--out DIR] [--dry-run] [--public]
+  agentds run --tier T ... [--out DIR] [--limit N] [--dedup-against REPO|--no-seed-dedup] [--no-near]
+  agentds push --repo you/agent-sft [--out DIR] [--dry-run] [--public]
   agentds stats [--out DIR]
 """
 from __future__ import annotations
@@ -80,10 +80,12 @@ def cmd_run(args):
 
     reg = load_registry()
     seed_hashes = None
-    if not args.no_seed_dedup:
-        SEED_CACHE.parent.mkdir(parents=True, exist_ok=True)
-        seed_hashes = build_seed_hashes(SEED_CACHE, limit=args.seed_limit)
-        print(f"[seed] {len(seed_hashes)} hashes")
+    ref = "" if args.no_seed_dedup else args.dedup_against
+    if ref:
+        cache = SEED_CACHE.parent / f"ref_{ref.replace('/', '_')}.txt"
+        cache.parent.mkdir(parents=True, exist_ok=True)
+        seed_hashes = build_seed_hashes(cache, seed_id=ref, limit=args.seed_limit)
+        print(f"[dedup-against] {ref}: {len(seed_hashes)} reference hashes")
     report = pipeline.run(
         reg, out_dir=args.out, tiers=args.tier or None, keys=args.key or None,
         seed_hashes=seed_hashes, near_dedup=(not args.no_near),
@@ -137,7 +139,9 @@ def main(argv=None):
     r.add_argument("--out", default=str(DEFAULT_OUT))
     r.add_argument("--limit", type=int, default=None, help="cap rows per subset (override registry)")
     r.add_argument("--seed-limit", type=int, default=None)
-    r.add_argument("--no-seed-dedup", action="store_true")
+    r.add_argument("--dedup-against", default="voidful/gemma4-agent-sft",
+                   help="schema-compatible reference dataset to dedup against (default: gemma4-agent-sft)")
+    r.add_argument("--no-seed-dedup", action="store_true", help="skip reference-dataset dedup")
     r.add_argument("--no-near", action="store_true")
     r.set_defaults(func=cmd_run)
 

@@ -9,8 +9,9 @@ Three layers, applied in order:
                   reformatted forks (glaive/xlam/toolace variants) don't double-count.
 
 The DeDuper is stateful and used across the whole run, so cross-source duplicates
-(e.g. ToolMind rows that re-package xLAM) are caught. Seed hashes can be preloaded
-to dedup the expansion against the published gemma4-agent-sft.
+(e.g. ToolMind rows that re-package xLAM) are caught. Reference hashes can be
+preloaded to dedup against any existing dataset(s) you've already trained on
+(see --dedup-against; defaults to the schema-compatible gemma4-agent-sft).
 """
 from __future__ import annotations
 

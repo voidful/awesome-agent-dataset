@@ -1,8 +1,9 @@
-"""Build a dedup index from the published seed dataset.
+"""Build a dedup index from a reference dataset.
 
-Streams voidful/gemma4-agent-sft (no full download) and recomputes each row's
-canonical content_hash so the expansion can be deduped against what's already
-shipped. Hashes are cached to disk so we only stream the seed once.
+Streams a schema-compatible reference dataset (no full download) and recomputes
+each row's canonical content_hash, so a run can be deduped against data you've
+already trained on / shipped. Default reference is voidful/gemma4-agent-sft, but
+any same-schema dataset works (pass --dedup-against). Hashes are cached to disk.
 """
 from __future__ import annotations
 

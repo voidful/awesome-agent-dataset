@@ -1,7 +1,7 @@
 [project]
 name = "agentds"
 version = "0.1.0"
-description = "Expansion toolkit for voidful/gemma4-agent-sft: normalize, dedup, quality-stratify HF agent/tool-use datasets into one canonical schema."
+description = "Catalog + toolkit for building model-agnostic agent-SFT datasets: normalize, dedup, and quality-stratify HF agent/tool-use datasets into one OpenAI-style schema."
 requires-python = ">=3.10"
 dependencies = [
     "datasets>=3.0",

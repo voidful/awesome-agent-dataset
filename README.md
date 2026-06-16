@@ -29,14 +29,14 @@ For fine-tuning an agent model, **finding tokens is not the bottleneck** — pub
 3. **Quality variance** — valid JSON ≠ a successful task; you need stratification.
 4. **Coding-agent skew** — SWE/terminal data is so abundant it drowns general agent ability if unbalanced.
 
-`agentds` solves all four: **one normalizer per format → group-level dedup → quality tiers → balanced mixture**, producing [`voidful/agent-sft`](https://huggingface.co/datasets/voidful/agent-sft) in the same canonical schema as the [`gemma4-agent-sft`](https://huggingface.co/datasets/voidful/gemma4-agent-sft) seed (so they concatenate).
+`agentds` solves all four: **one normalizer per format → group-level dedup → quality tiers → balanced mixture**, producing [`voidful/agent-sft`](https://huggingface.co/datasets/voidful/agent-sft) in a **standard, model-agnostic OpenAI-style schema** — train any model on it (Qwen, Llama, Gemma, GPT, …).
 
 ## ✨ Output dataset
 
-[**🤗 voidful/agent-sft**](https://huggingface.co/datasets/voidful/agent-sft) — produced entirely by this repo from the wired sources, deduplicated against the published seed.
+[**🤗 voidful/agent-sft**](https://huggingface.co/datasets/voidful/agent-sft) — a model-agnostic agent/tool-use SFT dataset, produced entirely by this repo from the wired sources.
 
 <!-- STATS:START -->
-**309,322 rows** from 27 wired sources, deduplicated against the published seed.
+**309,322 rows** from 27 wired sources, deduplicated (incl. against a schema-compatible reference dataset).
 
 | Tier | Rows | Share |
 |---|--:|--:|
@@ -48,7 +48,7 @@ For fine-tuning an agent model, **finding tokens is not the bottleneck** — pub
 | **Total** | **309,322** | |
 
 **Quality:** 147,238 high (48%) · 161,580 medium (52%) · 504 low (0.2%)
-**Dedup removed 99,492 candidates (24%)** — 43,914 SWE-group (same GitHub issue across SWE datasets) · 46,725 near-dup (MinHash) · 8,853 exact, *plus* dedup against the published seed. (E.g. `ansulev/DeepSeek-v4-Pro-Agent` → **0 kept**, fully collapsed into its `TeichAI` twin.)
+**Dedup removed 99,492 candidates (24%)** — 43,914 SWE-group (same GitHub issue across SWE datasets) · 46,725 near-dup (MinHash) · 8,853 exact, *plus* dedup against a schema-compatible reference dataset. (E.g. `ansulev/DeepSeek-v4-Pro-Agent` → **0 kept**, fully collapsed into its `TeichAI` twin.)
 **`agentds audit`:** 0 CoT leakage · 0 schema corruption · 0 id collisions · 0 foreign-marker leaks.
 
 Coding-heavy data (swe_terminal + agent_traces) is held to **~22%** so general agent ability isn't drowned. See [CATALOG.md](CATALOG.md) for per-source counts.
@@ -61,9 +61,9 @@ from datasets import load_dataset
 ds = load_dataset("voidful/agent-sft", split="train")
 hi = ds.filter(lambda r: json.loads(r["quality"])["tier"] == "high")   # high-quality SFT subset
 ex = hi[0]
-messages = json.loads(ex["messages"])   # OpenAI-style turns
+messages = json.loads(ex["messages"])   # OpenAI-style turns — feed to any chat template
 tools    = json.loads(ex["tools"])      # function definitions
-# concatenate with the seed: load_dataset("voidful/gemma4-agent-sft") — identical schema
+# schema-compatible with voidful/gemma4-agent-sft, so you can concatenate them
 ```
 
 ## 🚀 Quickstart
@@ -85,7 +85,7 @@ sources (`--key apigen swe_gym`). `--limit N` caps rows/subset for a quick dry r
 
 ## 🧩 Canonical schema
 
-Identical to [`voidful/gemma4-agent-sft`](https://huggingface.co/datasets/voidful/gemma4-agent-sft) so shards concatenate cleanly:
+A standard, **model-agnostic** OpenAI-style chat-with-tools schema (works with any model's chat template). Wire-compatible with [`voidful/gemma4-agent-sft`](https://huggingface.co/datasets/voidful/gemma4-agent-sft), so shards concatenate cleanly:
 
 | field | type | description |
 |---|---|---|
@@ -141,12 +141,12 @@ Adding a dataset = an entry in [`configs/registry.yaml`](configs/registry.yaml) 
   (streaming=True,     (per-format)   (schema     (exact + SWE-     (tiers)
    never fully          │             well-formed) provenance +
    downloaded)          │                          MinHash near-dup,
-                        │                          incl. vs seed)
+                        │                          incl. vs reference)
                   agentds/normalizers.py     agentds/dedup.py   agentds/quality.py
 ```
 
 - **Normalizers** ([`agentds/normalizers.py`](agentds/normalizers.py)) — one per format family: xLAM, ShareGPT (incl. Glaive `function_call`/`observation`), Hermes `<tool_call>` XML, ToolACE BFCL `[Func(k=v)]` (paren/space/path-style names), When2Call `<TOOLCALL>` + appropriate-refusal rows, native OpenHands SWE trajectories, Nemotron terminal transcripts, WebLINX/Mind2Web/WebArena action grammars, and the HF `agent-traces` format. Tools are synthesized from observed calls when a source ships no schema.
-- **Group-level dedup** ([`agentds/dedup.py`](agentds/dedup.py)) — (1) exact xxhash of normalized content; (2) **SWE-provenance** key so the same GitHub issue across SWE-Zero/nebius/SWE-Gym/SWE-smith/CoderForge collapses to one (real `repo-NNNN` ids by issue number; synthetic ids at full granularity); (3) **MinHash + LSH** near-dup over assistant action/tool-schema shingles. Stateful across the whole run + preloads the published seed's hashes.
+- **Group-level dedup** ([`agentds/dedup.py`](agentds/dedup.py)) — (1) exact xxhash of normalized content; (2) **SWE-provenance** key so the same GitHub issue across SWE-Zero/nebius/SWE-Gym/SWE-smith/CoderForge collapses to one (real `repo-NNNN` ids by issue number; synthetic ids at full granularity); (3) **MinHash + LSH** near-dup over assistant action/tool-schema shingles. Stateful across the whole run + can preload any reference dataset's hashes (`--dedup-against`).
 - **Quality** ([`agentds/quality.py`](agentds/quality.py)) — `{tier: high|medium|low, score, curated, signals}`; rewards multi-turn, schema-valid, observation-grounded tool use; folds in source success signals (SWE `resolved`, CoderForge `reward`); penalizes degenerate trajectories.
 
 ## 🧪 Recommended training recipe
@@ -189,4 +189,4 @@ Code: [MIT](LICENSE). **Each dataset keeps its upstream license** — recorded i
 
 ## 🙏 Acknowledgements
 
-Built on the open datasets catalogued here and the HuggingFace `datasets` / `teich` / `datasketch` ecosystems. Seed format from [`voidful/gemma4-agent-sft`](https://huggingface.co/datasets/voidful/gemma4-agent-sft).
+Built on the open datasets catalogued here and the HuggingFace `datasets` / `teich` / `datasketch` ecosystems. Schema is compatible with [`voidful/gemma4-agent-sft`](https://huggingface.co/datasets/voidful/gemma4-agent-sft).

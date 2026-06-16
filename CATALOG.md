@@ -33,7 +33,7 @@ Curated inventory of agent / tool-use / SWE / web datasets on the HF Hub, with n
 | [`fuvty/tau-bench-synthetic`](https://huggingface.co/datasets/fuvty/tau-bench-synthetic) | — | — | mit | other | 📋 listed | customer-service tool-use |
 | [`glaiveai/glaive-function-calling-v2`](https://huggingface.co/datasets/glaiveai/glaive-function-calling-v2) | 113k | — | apache-2.0 | glaive_flat_text | 📋 listed | raw flat-text; prefer the sharegpt fork (wired) |
 | [`nvidia/Nemotron-Agentic-v1`](https://huggingface.co/datasets/nvidia/Nemotron-Agentic-v1) | 335k | — | cc-by-4.0 | openai_messages | 📋 listed | interactive agent + tool calling |
-| [`nvidia/Nemotron-SFT-Agentic-v2`](https://huggingface.co/datasets/nvidia/Nemotron-SFT-Agentic-v2) | 992k | — | cc-by-4.0 | openai_messages | 📋 listed | in the seed dataset; tool-calling SFT main |
+| [`nvidia/Nemotron-SFT-Agentic-v2`](https://huggingface.co/datasets/nvidia/Nemotron-SFT-Agentic-v2) | 992k | — | cc-by-4.0 | openai_messages | 📋 listed | in the gemma4-agent-sft reference; tool-calling SFT main |
 | [`nvidia/When2Call`](https://huggingface.co/datasets/nvidia/When2Call) | 9k | — | cc-by-4.0 | openai_messages | 📋 listed | train_pref DPO pairs (when-not-to-call) |
 | [`Salesforce/xlam-function-calling-60k`](https://huggingface.co/datasets/Salesforce/xlam-function-calling-60k) | 60k | — | cc-by-4.0 | xlam_query_answers | 📋 listed | canonical xLAM; GATED — needs HF license + token |
 | [`stabletoolbench/ToolEnv2404`](https://huggingface.co/datasets/stabletoolbench/ToolEnv2404) | — | — | apache-2.0 | other | 📋 listed | StableToolBench tool environment |
@@ -87,13 +87,13 @@ Curated inventory of agent / tool-use / SWE / web datasets on the HF Hub, with n
 
 | Dataset | Rows | Tokens | License | Format | Status | Notes |
 |---|---|---|---|---|---|---|
-| [`Agent-Ark/Toucan-1.5M`](https://huggingface.co/datasets/Agent-Ark/Toucan-1.5M) | 1.5M | — | apache-2.0 | toucan | 📋 listed | in seed; MCP tool trajectories |
+| [`Agent-Ark/Toucan-1.5M`](https://huggingface.co/datasets/Agent-Ark/Toucan-1.5M) | 1.5M | — | apache-2.0 | toucan | 📋 listed | in gemma4-agent-sft reference; MCP tool trajectories |
 | [`CharlieDreemur/OpenManus-RL`](https://huggingface.co/datasets/CharlieDreemur/OpenManus-RL) | — | — | apache-2.0 | other | 📋 listed | ReAct-style; AgentInstruct+Agent-FLAN+AgentGym |
 | [`neulab/agent-data-collection`](https://huggingface.co/datasets/neulab/agent-data-collection) | — | — | mit | other | 📋 listed | unified multi-source (OpenHands/SWE/Mind2Web/...) |
-| [`open-thoughts/AgentTrove`](https://huggingface.co/datasets/open-thoughts/AgentTrove) | 1.70M | — | apache-2.0 | openai_messages | 📋 listed | in seed; 219-source agent trajectory pool |
+| [`open-thoughts/AgentTrove`](https://huggingface.co/datasets/open-thoughts/AgentTrove) | 1.70M | — | apache-2.0 | openai_messages | 📋 listed | in gemma4-agent-sft reference; 219-source agent trajectory pool |
 | [`open-thoughts/OpenThoughts-Agent-v1-SFT`](https://huggingface.co/datasets/open-thoughts/OpenThoughts-Agent-v1-SFT) | 15.2k | — | apache-2.0 | openai_messages | 📋 listed | agent SFT |
 | [`Solaris99/AgentBank`](https://huggingface.co/datasets/Solaris99/AgentBank) | 53k | — | apache-2.0 | other | 📋 listed | agent skill diversity |
-| [`zai-org/AgentInstruct`](https://huggingface.co/datasets/zai-org/AgentInstruct) | 1866 | — | apache-2.0 | sharegpt | 📋 listed | high-quality seed (ALFWorld/WebShop/KG/OS/DB) |
+| [`zai-org/AgentInstruct`](https://huggingface.co/datasets/zai-org/AgentInstruct) | 1866 | — | apache-2.0 | sharegpt | 📋 listed | high-quality starter (ALFWorld/WebShop/KG/OS/DB) |
 
 ## 🎯 RL / Verifier / Rejection-Sampling
 
